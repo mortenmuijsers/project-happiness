@@ -1,5 +1,5 @@
 // Bewaart de app op het apparaat zodat hij zonder internet opent.
-const CACHE = "happiness-v1";
+const CACHE = "happiness-v2";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", e => {

@@ -234,10 +234,12 @@ var storeOK = true;
 function load(){
   try{
     var raw = localStorage.getItem(KEY);
-    if(raw){ var s = JSON.parse(raw); if(s && Array.isArray(s.boxes)){ state = Object.assign(state, s); } }
+    if(raw){ var s = JSON.parse(raw); if(s && Array.isArray(s.boxes)){ state = Object.assign(state, s); fixNextNr(); } }
     localStorage.setItem(KEY+"-test","1"); localStorage.removeItem(KEY+"-test");
   }catch(e){ storeOK = false; }
 }
+// Volgend nummer = hoogste bestaande doos + 1, zodat verwijderde laatste dozen hun nummer teruggeven.
+function fixNextNr(){ state.nextNr = state.boxes.reduce(function(m,b){return Math.max(m,b.nr);},0)+1; }
 function save(){
   try{ localStorage.setItem(KEY, JSON.stringify(state)); storeOK = true; }
   catch(e){ storeOK = false; }
@@ -354,7 +356,7 @@ function openEdit(nr){
       closeModal(); save(); toast("Doos "+b.nr+" aangepast");
     }
     else if(t.dataset.ex==="del"){
-      if(t.dataset.sure){ state.boxes = state.boxes.filter(function(x){return x.nr!==b.nr;}); closeModal(); save(); toast("Doos "+b.nr+" verwijderd"); }
+      if(t.dataset.sure){ state.boxes = state.boxes.filter(function(x){return x.nr!==b.nr;}); fixNextNr(); closeModal(); save(); toast("Doos "+b.nr+" verwijderd"); }
       else { t.dataset.sure="1"; t.textContent="Zeker weten? Tik nogmaals"; }
     }
   };
@@ -446,7 +448,7 @@ function importCSV(file){
         return { nr:parseInt(x[0],10), soort:x[1], leef:x[2]||"", aantal:parseInt(x[3],10), best: bi>=0?bi:null, t: Date.now() };
       }).filter(function(b){ return b.nr>0 && b.aantal>0 && SOORTEN.indexOf(b.soort)>=0; });
       state.boxes = boxes;
-      state.nextNr = boxes.reduce(function(m,b){return Math.max(m,b.nr);},0)+1;
+      fixNextNr();
       save(); toast(boxes.length+" dozen teruggezet");
     }catch(e){ toast("Dit bestand kan ik niet lezen"); }
     $("importFile").value="";

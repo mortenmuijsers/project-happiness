@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f6f5c">
+<title>Project Happiness – Teller</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Happiness">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>
+  :root{
+    --bg:#f6f4ef; --card:#ffffff; --ink:#1d2321; --muted:#6b726f; --line:#e3dfd6;
+    --accent:#1f6f5c; --accent-ink:#ffffff; --accent-soft:#dcefe8;
+    --warn:#b4541c; --warn-soft:#fbe9dd; --danger:#a12a2a;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-text-size-adjust:100%}
+  body{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+  header{position:sticky;top:0;z-index:5;background:var(--accent);color:var(--accent-ink);
+    padding:calc(10px + env(safe-area-inset-top)) 16px 10px;display:flex;align-items:center;gap:12px}
+  header h1{font-size:17px;margin:0;font-weight:650;flex:1}
+  header .tot{font-size:13px;opacity:.9;text-align:right;line-height:1.25}
+  header .tot b{font-size:18px;display:block}
+  main{max-width:760px;margin:0 auto;padding:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+  h2{font-size:15px;margin:0 0 10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  .grid{display:grid;gap:8px}
+  .g2{grid-template-columns:repeat(2,1fr)} .g4{grid-template-columns:repeat(4,1fr)}
+  @media (min-width:560px){.g2{grid-template-columns:repeat(4,1fr)}}
+  button{font:inherit;cursor:pointer;border-radius:12px;border:1.5px solid var(--line);
+    background:#fff;color:var(--ink);padding:14px 8px;min-height:54px;font-weight:600;font-size:16px;
+    touch-action:manipulation}
+  button.sel{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff;width:100%;font-size:19px;min-height:62px}
+  button.primary:disabled{opacity:.35}
+  button.ghost{background:transparent}
+  button.small{min-height:40px;padding:8px 12px;font-size:14px}
+  button.danger{color:var(--danger);border-color:#e9c9c9}
+  .count{display:flex;align-items:center;gap:10px}
+  .count button{width:62px;flex:none;font-size:26px}
+  .count input{flex:1;min-width:0;text-align:center;font-size:34px;font-weight:700;height:62px;
+    border:1.5px solid var(--line);border-radius:12px;background:#fff;color:var(--ink)}
+  .hint{color:var(--muted);font-size:13px;margin:8px 0 0}
+  .done{background:var(--accent-soft);border-color:#b7dccf;text-align:center}
+  .done .nr{font-size:64px;font-weight:800;color:var(--accent);line-height:1}
+  .done p{margin:6px 0}
+  .banner{background:var(--warn-soft);border:1px solid #f0c9ad;color:var(--warn);border-radius:12px;
+    padding:12px 14px;margin-bottom:14px;display:flex;gap:10px;align-items:center;font-size:14px}
+  .banner span{flex:1}
+  nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);
+    display:grid;grid-template-columns:repeat(4,1fr);padding-bottom:env(safe-area-inset-bottom);z-index:6}
+  nav button{border:0;border-radius:0;min-height:62px;font-size:13px;color:var(--muted);background:#fff;font-weight:600}
+  nav button.on{color:var(--accent);box-shadow:inset 0 3px 0 var(--accent)}
+  nav i{display:block;font-style:normal;font-size:20px;margin-bottom:2px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+  th:first-child,td:first-child{text-align:left;white-space:normal}
+  thead th{color:var(--muted);font-weight:600;font-size:12px}
+  tfoot td{font-weight:700;border-bottom:0}
+  td.zero{color:#c4c0b7}
+  .sub{display:block;font-size:11px;color:var(--muted);font-weight:500}
+  .big{display:flex;gap:10px}
+  .big div{flex:1;background:var(--bg);border-radius:12px;padding:12px;text-align:center}
+  .big b{display:block;font-size:30px}
+  .big span{color:var(--muted);font-size:13px}
+  .box{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .box:last-child{border-bottom:0}
+  .box .n{font-weight:800;font-size:20px;min-width:46px;color:var(--accent)}
+  .box .d{flex:1;min-width:0}
+  .box .d b{display:block}
+  .box .d small{color:var(--muted)}
+  .box .a{font-weight:700;font-size:20px;min-width:40px;text-align:right}
+  select{font:inherit;font-size:15px;padding:10px;border-radius:10px;border:1.5px solid var(--line);background:#fff;color:var(--ink);max-width:100%}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .row > *{flex:1;min-width:130px}
+  .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:99px;background:var(--bg);color:var(--muted);margin-left:4px}
+  .tag.set{background:var(--accent-soft);color:var(--accent)}
+  .modal{position:fixed;inset:0;background:rgba(20,25,23,.45);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+  .modal .sheet{background:#fff;width:100%;max-width:760px;border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto}
+  .modal h3{margin:0 0 12px}
+  label.lbl{display:block;font-size:13px;color:var(--muted);margin:12px 0 6px;font-weight:600}
+  .hidden{display:none!important}
+  .empty{color:var(--muted);text-align:center;padding:20px 0}
+  .toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%);
+    background:var(--ink);color:#fff;padding:10px 16px;border-radius:99px;font-size:14px;z-index:30;opacity:0;transition:opacity .2s;pointer-events:none}
+  .toast.show{opacity:1}
+  input[type=text]{font:inherit;font-size:16px;padding:12px;border-radius:10px;border:1.5px solid var(--line);width:100%}
+</style>
+</head>
+<body>
+<header>
+  <h1>Project Happiness<br><span style="font-weight:400;font-size:13px;opacity:.85">Cadeaus tellen</span></h1>
+  <div class="tot"><b id="hTot">0</b>cadeaus · <span id="hBox">0</span> dozen</div>
+</header>
+
+<main>
+  <div id="backupBanner" class="banner hidden">
+    <span id="backupText">Maak een back-up.</span>
+    <button class="small" data-act="export">Back-up</button>
+  </div>
+  <div id="storeBanner" class="banner hidden">
+    <span>Let op: deze browser bewaart niets. Laat de app open staan en maak vaak een back-up.</span>
+  </div>
+
+  <!-- INVOER -->
+  <section id="v-invoer">
+    <div id="doneCard" class="card done hidden">
+      <p>Opgeslagen! Schrijf op de doos:</p>
+      <div class="nr" id="doneNr">0</div>
+      <p id="doneTxt"></p>
+      <button class="primary" data-act="next" style="margin-top:8px">Volgende doos</button>
+    </div>
+
+    <div id="formCard">
+      <div class="card">
+        <h2>1 · Soort</h2>
+        <div class="grid g2" id="soortBtns"></div>
+      </div>
+      <div class="card" id="leefCard">
+        <h2>2 · Leeftijd</h2>
+        <div class="grid g4" id="leefBtns"></div>
+      </div>
+      <div class="card">
+        <h2>3 · Aantal cadeaus in de doos</h2>
+        <div class="count">
+          <button data-act="min">−</button>
+          <input id="aantal" type="number" inputmode="numeric" min="0" max="999" placeholder="0">
+          <button data-act="plus">+</button>
+        </div>
+        <p class="hint" id="nextHint"></p>
+      </div>
+      <button class="primary" id="saveBtn" data-act="save" disabled>Doos opslaan</button>
+    </div>
+  </section>
+
+  <!-- DOZEN -->
+  <section id="v-dozen" class="hidden">
+    <div class="card">
+      <h2>Filter</h2>
+      <div class="row">
+        <select id="fSoort"></select>
+        <select id="fLeef"></select>
+        <select id="fBest"></select>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <select id="bulkBest"></select>
+        <button class="small" data-act="bulk">Getoonde dozen toewijzen</button>
+      </div>
+      <p class="hint" id="filterInfo"></p>
+    </div>
+    <div class="card" id="boxList"></div>
+  </section>
+
+  <!-- OVERZICHT -->
+  <section id="v-overzicht" class="hidden">
+    <div class="card">
+      <div class="big">
+        <div><b id="oTot">0</b><span>cadeaus</span></div>
+        <div><b id="oBox">0</b><span>dozen</span></div>
+        <div><b id="oAvg">0</b><span>gem. per doos</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Per soort en leeftijd</h2>
+      <div style="overflow-x:auto"><table id="matrix"></table></div>
+      <p class="hint">Grote getallen zijn cadeaus, de kleine getallen eronder zijn dozen.</p>
+    </div>
+    <div class="card">
+      <h2>Per bestemming</h2>
+      <div style="overflow-x:auto"><table id="bestTable"></table></div>
+    </div>
+  </section>
+
+  <!-- MEER -->
+  <section id="v-meer" class="hidden">
+    <div class="card">
+      <h2>Back-up &amp; export</h2>
+      <p style="margin-top:0">Download alle dozen als bestand dat je in Excel kunt openen. Doe dit regelmatig. Met hetzelfde bestand kun je alles ook terugzetten.</p>
+      <button class="primary" data-act="export">Exporteren (Excel / CSV)</button>
+      <p class="hint" id="lastExport"></p>
+      <label class="lbl">Back-up terugzetten</label>
+      <input type="file" id="importFile" accept=".csv,text/csv">
+      <p class="hint">Hiermee worden de huidige gegevens vervangen door die uit het bestand.</p>
+    </div>
+    <div class="card">
+      <h2>Bestemmingen</h2>
+      <p style="margin-top:0" class="hint">Pas de naam van de derde partij aan zodra die bekend is.</p>
+      <div id="bestNames"></div>
+    </div>
+    <div class="card">
+      <h2>Alles wissen</h2>
+      <p style="margin-top:0" class="hint">Alleen voor een nieuwe ronde (bijv. volgend jaar). Maak eerst een export.</p>
+      <button class="danger small" data-act="wipe">Alle dozen wissen…</button>
+    </div>
+    <div class="card">
+      <h2>Klaar voor de garage?</h2>
+      <p style="margin:0 0 6px" id="offlineStatus">Controleren…</p>
+      <p style="margin:0" id="persistStatus" class="hint"></p>
+    </div>
+    <p class="hint" style="text-align:center">Gegevens staan alleen op dit apparaat. Er gaat niets naar internet.</p>
+  </section>
+</main>
+
+<nav>
+  <button data-tab="invoer" class="on"><i>＋</i>Invoer</button>
+  <button data-tab="dozen"><i>▦</i>Dozen</button>
+  <button data-tab="overzicht"><i>Σ</i>Overzicht</button>
+  <button data-tab="meer"><i>⋯</i>Meer</button>
+</nav>
+
+<div id="modal" class="modal hidden"><div class="sheet" id="sheet"></div></div>
+<div id="toast" class="toast"></div>
+
+<script>
+(function(){
+"use strict";
+var SOORTEN = ["Speelgoed","Spellen & puzzels","Creatief","Boeken","Knuffels","Buiten & sport","Overig","Niet geschikt"];
+var LEEFTIJDEN = ["0–3","4–7","8–12","12+"];
+var NO_AGE = "Niet geschikt";
+var KEY = "ph-teller-v1";
+var BACKUP_MIN = 60;
+
+var state = { boxes: [], nextNr: 1, best: ["SINA","Kerstmarkt","Andere partij"], lastExport: 0 };
+var form = { soort:null, leef:null };
+var storeOK = true;
+
+function load(){
+  try{
+    var raw = localStorage.getItem(KEY);
+    if(raw){ var s = JSON.parse(raw); if(s && Array.isArray(s.boxes)){ state = Object.assign(state, s); } }
+    localStorage.setItem(KEY+"-test","1"); localStorage.removeItem(KEY+"-test");
+  }catch(e){ storeOK = false; }
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(state)); storeOK = true; }
+  catch(e){ storeOK = false; }
+  render();
+}
+
+var $ = function(id){ return document.getElementById(id); };
+function esc(s){ return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+function toast(t){ var el=$("toast"); el.textContent=t; el.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(function(){el.classList.remove("show");},1800); }
+function bestLabel(b){ return b===0||b===1||b===2 ? state.best[b] : "Nog te bepalen"; }
+function fmtTime(ts){ var d=new Date(ts); return d.toLocaleTimeString("nl-NL",{hour:"2-digit",minute:"2-digit"}); }
+function total(list){ return list.reduce(function(a,b){return a+b.aantal;},0); }
+
+/* ---------- Invoer ---------- */
+function buildButtons(){
+  $("soortBtns").innerHTML = SOORTEN.map(function(s){return '<button data-soort="'+esc(s)+'">'+esc(s)+'</button>';}).join("");
+  $("leefBtns").innerHTML = LEEFTIJDEN.map(function(l){return '<button data-leef="'+l+'">'+l+'</button>';}).join("");
+}
+function renderForm(){
+  document.querySelectorAll("[data-soort]").forEach(function(b){ b.classList.toggle("sel", b.getAttribute("data-soort")===form.soort); });
+  document.querySelectorAll("[data-leef]").forEach(function(b){ b.classList.toggle("sel", b.getAttribute("data-leef")===form.leef); });
+  var noAge = form.soort===NO_AGE;
+  $("leefCard").classList.toggle("hidden", noAge);
+  var n = parseInt($("aantal").value,10);
+  $("saveBtn").disabled = !(form.soort && (noAge || form.leef) && n>0);
+  $("nextHint").textContent = "Deze doos krijgt nummer " + state.nextNr + ".";
+}
+function saveBox(){
+  var n = parseInt($("aantal").value,10);
+  if(!(n>0)) return;
+  var box = { nr: state.nextNr, soort: form.soort, leef: form.soort===NO_AGE ? "" : form.leef, aantal: n, best: null, t: Date.now() };
+  state.boxes.push(box); state.nextNr++;
+  save();
+  $("doneNr").textContent = box.nr;
+  $("doneTxt").textContent = box.soort + (box.leef ? " · " + box.leef + " jaar" : "") + " · " + box.aantal + " cadeaus";
+  $("formCard").classList.add("hidden"); $("doneCard").classList.remove("hidden");
+  window.scrollTo(0,0);
+}
+function nextBox(){
+  // Soort en leeftijd blijven staan: vaak volgt een doos van hetzelfde type.
+  $("aantal").value = "";
+  $("doneCard").classList.add("hidden"); $("formCard").classList.remove("hidden");
+  renderForm();
+}
+
+/* ---------- Dozen ---------- */
+function optList(sel, items, first){
+  var cur = sel.value;
+  sel.innerHTML = '<option value="">'+first+'</option>' + items.map(function(it){return '<option value="'+esc(it[0])+'">'+esc(it[1])+'</option>';}).join("");
+  sel.value = cur;
+}
+function bestOptions(){ return [["0",state.best[0]],["1",state.best[1]],["2",state.best[2]],["none","Nog te bepalen"]]; }
+function filtered(){
+  var fs=$("fSoort").value, fl=$("fLeef").value, fb=$("fBest").value;
+  return state.boxes.filter(function(b){
+    if(fs && b.soort!==fs) return false;
+    if(fl && b.leef!==fl) return false;
+    if(fb){ if(fb==="none"){ if(b.best!==null) return false; } else if(String(b.best)!==fb) return false; }
+    return true;
+  });
+}
+function renderDozen(){
+  optList($("fSoort"), SOORTEN.map(function(s){return [s,s];}), "Alle soorten");
+  optList($("fLeef"), LEEFTIJDEN.map(function(l){return [l,l+" jaar"];}), "Alle leeftijden");
+  optList($("fBest"), bestOptions(), "Alle bestemmingen");
+  optList($("bulkBest"), bestOptions(), "Kies bestemming…");
+  var list = filtered().slice().sort(function(a,b){return b.nr-a.nr;});
+  $("filterInfo").textContent = list.length + " dozen getoond · " + total(list) + " cadeaus";
+  if(!list.length){ $("boxList").innerHTML = '<div class="empty">Nog geen dozen'+(state.boxes.length?" met dit filter":"")+'.</div>'; return; }
+  $("boxList").innerHTML = list.map(function(b){
+    return '<div class="box" data-edit="'+b.nr+'">'+
+      '<div class="n">'+b.nr+'</div>'+
+      '<div class="d"><b>'+esc(b.soort)+(b.leef?' · '+esc(b.leef):'')+'</b>'+
+      '<small>'+fmtTime(b.t)+'<span class="tag'+(b.best!==null?' set':'')+'">'+esc(bestLabel(b.best))+'</span></small></div>'+
+      '<div class="a">'+b.aantal+'</div></div>';
+  }).join("");
+}
+function bulkAssign(){
+  var v = $("bulkBest").value; if(!v){ toast("Kies eerst een bestemming"); return; }
+  var list = filtered(); if(!list.length) return;
+  var best = v==="none" ? null : parseInt(v,10);
+  list.forEach(function(b){ b.best = best; });
+  save(); toast(list.length+" dozen → "+bestLabel(best));
+}
+
+/* ---------- Bewerken ---------- */
+function openEdit(nr){
+  var b = state.boxes.find(function(x){return x.nr===nr;}); if(!b) return;
+  var draft = { soort:b.soort, leef:b.leef, aantal:b.aantal, best:b.best };
+  var sheet = $("sheet");
+  function draw(){
+    var noAge = draft.soort===NO_AGE;
+    sheet.innerHTML =
+      '<h3>Doos '+b.nr+' aanpassen</h3>'+
+      '<label class="lbl">Soort</label><div class="grid g2">'+SOORTEN.map(function(s){return '<button class="small'+(draft.soort===s?' sel':'')+'" data-es="'+esc(s)+'">'+esc(s)+'</button>';}).join("")+'</div>'+
+      (noAge?'':'<label class="lbl">Leeftijd</label><div class="grid g4">'+LEEFTIJDEN.map(function(l){return '<button class="small'+(draft.leef===l?' sel':'')+'" data-el="'+l+'">'+l+'</button>';}).join("")+'</div>')+
+      '<label class="lbl">Aantal</label><div class="count"><button data-ea="-1">−</button><input id="eAantal" type="number" inputmode="numeric" value="'+draft.aantal+'"><button data-ea="1">+</button></div>'+
+      '<label class="lbl">Bestemming</label><select id="eBest" style="width:100%">'+bestOptions().map(function(o){return '<option value="'+o[0]+'">'+esc(o[1])+'</option>';}).join("")+'</select>'+
+      '<div class="row" style="margin-top:16px"><button class="ghost" data-ex="cancel">Annuleren</button><button class="sel" data-ex="ok">Opslaan</button></div>'+
+      '<div style="margin-top:18px;text-align:center"><button class="danger small" data-ex="del">Doos verwijderen</button></div>';
+    $("eBest").value = draft.best===null ? "none" : String(draft.best);
+  }
+  draw();
+  sheet.onclick = function(e){
+    var t = e.target.closest("button"); if(!t) return;
+    if(t.dataset.es){ draft.soort=t.dataset.es; if(draft.soort!==NO_AGE && !draft.leef) draft.leef=LEEFTIJDEN[0]; syncDraft(); draw(); }
+    else if(t.dataset.el){ draft.leef=t.dataset.el; syncDraft(); draw(); }
+    else if(t.dataset.ea){ syncDraft(); draft.aantal=Math.max(1,(draft.aantal||0)+parseInt(t.dataset.ea,10)); draw(); }
+    else if(t.dataset.ex==="cancel"){ closeModal(); }
+    else if(t.dataset.ex==="ok"){
+      syncDraft();
+      if(!(draft.aantal>0)){ toast("Aantal moet groter dan 0 zijn"); return; }
+      b.soort=draft.soort; b.leef = draft.soort===NO_AGE ? "" : draft.leef; b.aantal=draft.aantal; b.best=draft.best;
+      closeModal(); save(); toast("Doos "+b.nr+" aangepast");
+    }
+    else if(t.dataset.ex==="del"){
+      if(t.dataset.sure){ state.boxes = state.boxes.filter(function(x){return x.nr!==b.nr;}); closeModal(); save(); toast("Doos "+b.nr+" verwijderd"); }
+      else { t.dataset.sure="1"; t.textContent="Zeker weten? Tik nogmaals"; }
+    }
+  };
+  function syncDraft(){
+    var a = parseInt(($("eAantal")||{}).value,10); if(!isNaN(a)) draft.aantal=a;
+    var s = $("eBest"); if(s){ draft.best = s.value==="none" ? null : parseInt(s.value,10); }
+  }
+  $("modal").classList.remove("hidden");
+}
+function closeModal(){ $("modal").classList.add("hidden"); $("sheet").innerHTML=""; }
+
+/* ---------- Overzicht ---------- */
+function renderOverzicht(){
+  var B = state.boxes, T = total(B);
+  $("oTot").textContent = T; $("oBox").textContent = B.length; $("oAvg").textContent = B.length ? Math.round(T/B.length) : 0;
+  var cols = LEEFTIJDEN.concat([""]);
+  function cell(list){ var n=total(list); return n ? '<td>'+n+'<span class="sub">'+list.length+' d.</span></td>' : '<td class="zero">–</td>'; }
+  var h = '<thead><tr><th>Soort</th>'+LEEFTIJDEN.map(function(l){return '<th>'+l+'</th>';}).join("")+'<th>Totaal</th></tr></thead><tbody>';
+  SOORTEN.forEach(function(s){
+    var rowB = B.filter(function(b){return b.soort===s;});
+    h += '<tr><td>'+esc(s)+'</td>';
+    if(s===NO_AGE){ h += '<td class="zero" colspan="4" style="text-align:center">geen leeftijd</td>'; }
+    else LEEFTIJDEN.forEach(function(l){ h += cell(rowB.filter(function(b){return b.leef===l;})); });
+    h += cell(rowB) + '</tr>';
+  });
+  h += '</tbody><tfoot><tr><td>Totaal</td>';
+  LEEFTIJDEN.forEach(function(l){ h += cell(B.filter(function(b){return b.leef===l;})); });
+  h += cell(B) + '</tr></tfoot>';
+  $("matrix").innerHTML = h;
+
+  var bh = '<thead><tr><th>Bestemming</th>'+LEEFTIJDEN.map(function(l){return '<th>'+l+'</th>';}).join("")+'<th>Totaal</th></tr></thead><tbody>';
+  [0,1,2,null].forEach(function(k){
+    var rowB = B.filter(function(b){return b.best===k && b.soort!==NO_AGE;});
+    bh += '<tr><td>'+esc(bestLabel(k))+'</td>';
+    LEEFTIJDEN.forEach(function(l){ bh += cell(rowB.filter(function(b){return b.leef===l;})); });
+    bh += cell(rowB) + '</tr>';
+  });
+  bh += '</tbody>';
+  $("bestTable").innerHTML = bh;
+}
+
+/* ---------- Meer ---------- */
+function renderMeer(){
+  $("bestNames").innerHTML = state.best.map(function(n,i){
+    return '<label class="lbl">Bestemming '+(i+1)+'</label><input type="text" data-bn="'+i+'" value="'+esc(n)+'">';
+  }).join("");
+  $("lastExport").textContent = state.lastExport ? "Laatste export: " + fmtTime(state.lastExport) : "Nog geen export gemaakt.";
+}
+
+/* ---------- Export / import ---------- */
+function csvCell(v){ v = String(v==null?"":v); return /[";\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }
+function exportCSV(){
+  var rows = [["Doos","Soort","Leeftijd","Aantal","Bestemming","Tijd"]];
+  state.boxes.slice().sort(function(a,b){return a.nr-b.nr;}).forEach(function(b){
+    var d = new Date(b.t);
+    rows.push([b.nr,b.soort,b.leef,b.aantal,bestLabel(b.best), d.toLocaleDateString("nl-NL")+" "+fmtTime(b.t)]);
+  });
+  var csv = "﻿" + rows.map(function(r){return r.map(csvCell).join(";");}).join("\r\n");
+  var blob = new Blob([csv],{type:"text/csv;charset=utf-8"});
+  var d = new Date(); var stamp = d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")+"_"+String(d.getHours()).padStart(2,"0")+String(d.getMinutes()).padStart(2,"0");
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "happiness-dozen_"+stamp+".csv";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000);
+  state.lastExport = Date.now(); save(); toast("Export gedownload");
+}
+function parseCSV(text){
+  text = text.replace(/^﻿/,"");
+  var rows=[], row=[], cur="", q=false;
+  for(var i=0;i<text.length;i++){
+    var c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=c; }
+    else if(c==='"') q=true;
+    else if(c===";"||c===","){ row.push(cur); cur=""; }
+    else if(c==="\n"){ row.push(cur); rows.push(row); row=[]; cur=""; }
+    else if(c!=="\r") cur+=c;
+  }
+  if(cur!==""||row.length){ row.push(cur); rows.push(row); }
+  return rows;
+}
+function importCSV(file){
+  var r = new FileReader();
+  r.onload = function(){
+    try{
+      var rows = parseCSV(r.result).filter(function(x){return x.length>=4 && x[0]!=="";});
+      if(!rows.length || rows[0][0].toLowerCase()!=="doos") throw new Error("kop");
+      var boxes = rows.slice(1).map(function(x){
+        var bi = state.best.indexOf(x[4]);
+        return { nr:parseInt(x[0],10), soort:x[1], leef:x[2]||"", aantal:parseInt(x[3],10), best: bi>=0?bi:null, t: Date.now() };
+      }).filter(function(b){ return b.nr>0 && b.aantal>0 && SOORTEN.indexOf(b.soort)>=0; });
+      state.boxes = boxes;
+      state.nextNr = boxes.reduce(function(m,b){return Math.max(m,b.nr);},0)+1;
+      save(); toast(boxes.length+" dozen teruggezet");
+    }catch(e){ toast("Dit bestand kan ik niet lezen"); }
+    $("importFile").value="";
+  };
+  r.readAsText(file);
+}
+function wipe(btn){
+  if(!btn.dataset.sure){ btn.dataset.sure="1"; btn.textContent="Echt alles wissen? Tik nogmaals"; return; }
+  state.boxes=[]; state.nextNr=1; state.lastExport=0; save(); btn.dataset.sure=""; btn.textContent="Alle dozen wissen…"; toast("Alles gewist");
+}
+
+/* ---------- Algemeen ---------- */
+var tab = "invoer";
+function render(){
+  var T = total(state.boxes);
+  $("hTot").textContent = T; $("hBox").textContent = state.boxes.length;
+  var since = state.lastExport || (state.boxes.length ? Math.min.apply(null, state.boxes.map(function(b){return b.t;})) : Date.now());
+  var mins = (Date.now()-since)/60000;
+  var showB = state.boxes.length>0 && mins>BACKUP_MIN;
+  $("backupBanner").classList.toggle("hidden", !showB);
+  if(showB) $("backupText").textContent = state.lastExport ? "Laatste back-up is meer dan een uur geleden." : "Nog geen back-up gemaakt.";
+  $("storeBanner").classList.toggle("hidden", storeOK);
+  if(tab==="invoer") renderForm();
+  if(tab==="dozen") renderDozen();
+  if(tab==="overzicht") renderOverzicht();
+  if(tab==="meer") renderMeer();
+}
+function showTab(t){
+  tab = t;
+  ["invoer","dozen","overzicht","meer"].forEach(function(x){ $("v-"+x).classList.toggle("hidden", x!==t); });
+  document.querySelectorAll("nav button").forEach(function(b){ b.classList.toggle("on", b.dataset.tab===t); });
+  window.scrollTo(0,0); render();
+}
+
+document.addEventListener("click", function(e){
+  var t = e.target.closest("button,[data-edit]"); if(!t) return;
+  if(t.closest("#sheet")) return;
+  if(t.dataset.tab) return showTab(t.dataset.tab);
+  if(t.dataset.soort){ form.soort = t.dataset.soort; return renderForm(); }
+  if(t.dataset.leef){ form.leef = t.dataset.leef; return renderForm(); }
+  if(t.dataset.edit) return openEdit(parseInt(t.dataset.edit,10));
+  switch(t.dataset.act){
+    case "plus": $("aantal").value = (parseInt($("aantal").value,10)||0)+1; renderForm(); break;
+    case "min": $("aantal").value = Math.max(0,(parseInt($("aantal").value,10)||0)-1); renderForm(); break;
+    case "save": saveBox(); break;
+    case "next": nextBox(); break;
+    case "bulk": bulkAssign(); break;
+    case "export": exportCSV(); break;
+    case "wipe": wipe(t); break;
+  }
+});
+$("aantal").addEventListener("input", renderForm);
+$("aantal").addEventListener("keydown", function(e){ if(e.key==="Enter" && !$("saveBtn").disabled){ e.preventDefault(); saveBox(); } });
+["fSoort","fLeef","fBest"].forEach(function(id){ $(id).addEventListener("change", renderDozen); });
+$("importFile").addEventListener("change", function(){ if(this.files[0]) importCSV(this.files[0]); });
+document.addEventListener("change", function(e){
+  if(e.target.dataset && e.target.dataset.bn!==undefined){
+    var i = parseInt(e.target.dataset.bn,10), v = e.target.value.trim();
+    if(v){ state.best[i]=v; save(); toast("Naam opgeslagen"); }
+  }
+});
+$("modal").addEventListener("click", function(e){ if(e.target.id==="modal") closeModal(); });
+setInterval(render, 60000);
+
+/* ---------- Offline / installatie ---------- */
+var offlineReady = false, persisted = null;
+function renderOffline(){
+  var el = $("offlineStatus"); if(!el) return;
+  if(!("serviceWorker" in navigator) || location.protocol==="file:"){
+    el.innerHTML = "⚠️ Open de app via het webadres om hem offline klaar te zetten.";
+  } else if(offlineReady){
+    el.innerHTML = "✅ De app staat op dit apparaat en werkt zonder internet.";
+  } else {
+    el.innerHTML = "⏳ Bezig met klaarzetten… Houd internet nog even aan en herlaad zo nodig.";
+  }
+  var p = $("persistStatus");
+  if(persisted===true) p.textContent = "Opslag is vastgezet: de browser ruimt je gegevens niet zelf op.";
+  else if(persisted===false) p.textContent = "Tip: zet de app op je beginscherm, dan worden je gegevens beter bewaard.";
+}
+if("serviceWorker" in navigator && location.protocol!=="file:"){
+  navigator.serviceWorker.register("sw.js").then(function(){ return navigator.serviceWorker.ready; })
+    .then(function(){ offlineReady = true; renderOffline(); })
+    .catch(function(){ renderOffline(); });
+}
+if(navigator.storage && navigator.storage.persist){
+  navigator.storage.persist().then(function(ok){ persisted = ok; renderOffline(); }).catch(function(){});
+}
+var _renderMeer = renderMeer;
+renderMeer = function(){ _renderMeer(); renderOffline(); };
+
+load(); buildButtons(); render();
+})();
+</script>
+</body>
+</html>
